@@ -14,7 +14,11 @@
 					browserVersion: 0,
 					os: 'other',
 					osVersion: 0,
-					canUse: null
+					mobile: false,
+					canUse: null,
+					flags: {
+						lsdUnits: false,
+					},
 				},
 				ua = navigator.userAgent,
 				a, i;
@@ -25,6 +29,7 @@
 					['edge',		/Edge\/([0-9\.]+)/],
 					['safari',		/Version\/([0-9\.]+).+Safari/],
 					['chrome',		/Chrome\/([0-9\.]+)/],
+					['chrome',		/CriOS\/([0-9\.]+)/],
 					['ie',			/Trident\/.+rv:([0-9]+)/]
 				];
 	
@@ -82,39 +87,47 @@
 					))
 						o.os = 'ios';
 	
+			// mobile.
+				o.mobile = (o.os == 'android' || o.os == 'ios');
+	
 			// canUse.
 				var _canUse = document.createElement('div');
 	
-				o.canUse = function(p) {
+				o.canUse = function(property, value) {
 	
-					var e = _canUse.style,
-						up = p.charAt(0).toUpperCase() + p.slice(1);
+					var style;
 	
-					return	(
-								p in e
-							||	('Moz' + up) in e
-							||	('Webkit' + up) in e
-							||	('O' + up) in e
-							||	('ms' + up) in e
-					);
+					// Get style.
+						style = _canUse.style;
+	
+					// Property doesn't exist? Can't use it.
+						if (!(property in style))
+							return false;
+	
+					// Value provided?
+						if (typeof value !== 'undefined') {
+	
+							// Assign value.
+								style[property] = value;
+	
+							// Value is empty? Can't use it.
+								if (style[property] == '')
+									return false;
+	
+						}
+	
+					return true;
 	
 				};
+	
+			// flags.
+				o.flags.lsdUnits = o.canUse('width', '100dvw');
 	
 			return o;
 	
 		}()),
 		trigger = function(t) {
-	
-			if (client.browser == 'ie') {
-	
-				var e = document.createEvent('Event');
-				e.initEvent(t, false, true);
-				dispatchEvent(e);
-	
-			}
-			else
-				dispatchEvent(new Event(t));
-	
+			dispatchEvent(new Event(t));
 		},
 		cssRules = function(selectorText) {
 	
@@ -171,6 +184,10 @@
 				if (h.length > 0
 				&&	!h.match(/^[a-zA-Z]/))
 					h = 'x' + h;
+	
+			// Convert to lowercase.
+				if (typeof h == 'string')
+					h = h.toLowerCase();
 	
 			return h;
 	
@@ -286,12 +303,122 @@
 			// Scroll to top.
 				scrollToElement(null);
 	
+		},
+		loadElements = function(parent) {
+	
+			var a, e, x, i;
+	
+			// IFRAMEs.
+	
+				// Get list of unloaded IFRAMEs.
+					a = parent.querySelectorAll('iframe[data-src]:not([data-src=""])');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Load.
+							a[i].src = a[i].dataset.src;
+	
+						// Mark as loaded.
+							a[i].dataset.src = "";
+	
+					}
+	
+			// Video.
+	
+				// Get list of videos (autoplay).
+					a = parent.querySelectorAll('video[autoplay]');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Play if paused.
+							if (a[i].paused)
+								a[i].play();
+	
+					}
+	
+			// Autofocus.
+	
+				// Get first element with data-autofocus attribute.
+					e = parent.querySelector('[data-autofocus="1"]');
+	
+				// Determine type.
+					x = e ? e.tagName : null;
+	
+					switch (x) {
+	
+						case 'FORM':
+	
+							// Get first input.
+								e = e.querySelector('.field input, .field select, .field textarea');
+	
+							// Found? Focus.
+								if (e)
+									e.focus();
+	
+							break;
+	
+						default:
+							break;
+	
+					}
+	
+		},
+		unloadElements = function(parent) {
+	
+			var a, e, x, i;
+	
+			// IFRAMEs.
+	
+				// Get list of loaded IFRAMEs.
+					a = parent.querySelectorAll('iframe[data-src=""]');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Don't unload? Skip.
+							if (a[i].dataset.srcUnload === '0')
+								continue;
+	
+						// Mark as unloaded.
+							a[i].dataset.src = a[i].src;
+	
+						// Unload.
+							a[i].src = '';
+	
+					}
+	
+			// Video.
+	
+				// Get list of videos.
+					a = parent.querySelectorAll('video');
+	
+				// Step through list.
+					for (i=0; i < a.length; i++) {
+	
+						// Pause if playing.
+							if (!a[i].paused)
+								a[i].pause();
+	
+					}
+	
+			// Autofocus.
+	
+				// Get focused element.
+					e = $(':focus');
+	
+				// Found? Blur.
+					if (e)
+						e.blur();
+	
+	
 		};
 	
 		// Expose scrollToElement.
 			window._scrollToTop = scrollToTop;
 	
-	// Animation.
+	// "On Load" animation.
 		on('load', function() {
 			setTimeout(function() {
 				$body.className = $body.className.replace(/\bis-loading\b/, 'is-playing');
@@ -306,7 +433,7 @@
 		(function() {
 	
 			var initialSection, initialScrollPoint, initialId,
-				header, footer, name, hideHeader, hideFooter,
+				header, footer, name, hideHeader, hideFooter, disableAutoScroll,
 				h, e, ee, k,
 				locked = false,
 				doNext = function() {
@@ -355,74 +482,6 @@
 						return;
 	
 					location.href = '#' + section.id.replace(/-section$/, '');
-	
-				},
-				loadElements = function(parent) {
-	
-					var a, i;
-	
-					// IFRAMEs.
-	
-						// Get list of unloaded IFRAMEs.
-							a = parent.querySelectorAll('iframe[data-src]:not([data-src=""])');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Load.
-									a[i].src = a[i].dataset.src;
-	
-								// Mark as loaded.
-									a[i].dataset.src = "";
-	
-							}
-	
-					// Video.
-	
-						// Get list of videos (autoplay).
-							a = parent.querySelectorAll('video[autoplay]');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Play.
-									a[i].play();
-	
-							}
-	
-				},
-				unloadElements = function(parent) {
-	
-					var a, i;
-	
-					// IFRAMEs.
-	
-						// Get list of loaded IFRAMEs.
-							a = parent.querySelectorAll('iframe[data-src=""]');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Mark as unloaded.
-									a[i].dataset.src = a[i].src;
-	
-								// Unload.
-									a[i].src = '';
-	
-							}
-	
-					// Video.
-	
-						// Get list of videos.
-							a = parent.querySelectorAll('video');
-	
-						// Step through list.
-							for (i=0; i < a.length; i++) {
-	
-								// Pause.
-									a[i].pause();
-	
-							}
 	
 				},
 				sections = {};
@@ -509,12 +568,15 @@
 	
 							}
 	
+					// Get options.
+						name = (h ? h : 'home');
+						hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
+						hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
+						disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
 					// Deactivate all sections (except initial).
 	
 						// Initially hide header and/or footer (if necessary).
-							name = (h ? h : 'home');
-							hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
-							hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
 	
 							// Header.
 								if (header && hideHeader) {
@@ -548,8 +610,15 @@
 					// Load elements.
 						loadElements(initialSection);
 	
-				 	// Scroll to top.
-						scrollToElement(null, 'instant');
+						if (header)
+							loadElements(header);
+	
+						if (footer)
+							loadElements(footer);
+	
+					// Scroll to top (if not disabled for this section).
+						if (!disableAutoScroll)
+							scrollToElement(null, 'instant');
 	
 				// Load event.
 					on('load', function() {
@@ -564,7 +633,7 @@
 				on('hashchange', function(event) {
 	
 					var section, scrollPoint, id, sectionHeight, currentSection, currentSectionHeight,
-						name, hideHeader, hideFooter,
+						name, hideHeader, hideFooter, disableAutoScroll,
 						h, e, ee, k;
 	
 					// Lock.
@@ -617,12 +686,16 @@
 					// Section already active?
 						if (!section.classList.contains('inactive')) {
 	
+							// Get options.
+								name = (section ? section.id.replace(/-section$/, '') : null);
+								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
 						 	// Scroll to scroll point (if applicable).
 						 		if (scrollPoint)
 									scrollToElement(scrollPoint);
 	
-							// Otherwise, just scroll to top.
-								else
+							// Otherwise, just scroll to top (if not disabled for this section).
+								else if (!disableAutoScroll)
 									scrollToElement(null);
 	
 							// Bail.
@@ -640,12 +713,15 @@
 								if (location.hash == '#home')
 									history.replaceState(null, null, '#');
 	
+							// Get options.
+								name = (section ? section.id.replace(/-section$/, '') : null);
+								hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
+								hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
+								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+	
 							// Deactivate current section.
 	
 								// Hide header and/or footer (if necessary).
-									name = (section ? section.id.replace(/-section$/, '') : null);
-									hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
-									hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
 	
 									// Header.
 										if (header && hideHeader) {
@@ -726,8 +802,9 @@
 										// Trigger 'resize' event.
 											trigger('resize');
 	
-										// Scroll to top.
-											scrollToElement(null, 'instant');
+										// Scroll to top (if not disabled for this section).
+											if (!disableAutoScroll)
+												scrollToElement(null, 'instant');
 	
 										// Get target height.
 											sectionHeight = section.offsetHeight;
@@ -801,7 +878,8 @@
 					on('click', function(event) {
 	
 						var t = event.target,
-							tagName = t.tagName.toUpperCase();
+							tagName = t.tagName.toUpperCase(),
+							scrollPoint;
 	
 						// Find real target.
 							switch (tagName) {
@@ -833,19 +911,34 @@
 	
 							}
 	
-						// Target is an anchor *and* its href is a hash that matches the current hash?
+						// Target is an anchor *and* its href is a hash?
 							if (t.tagName == 'A'
-							&&	t.getAttribute('href').substr(0, 1) == '#'
-							&&	t.hash == window.location.hash) {
+							&&	t.getAttribute('href').substr(0, 1) == '#') {
 	
-								// Prevent default.
-									event.preventDefault();
+								// Hash matches an invisible scroll point?
+									if (!!(scrollPoint = $('[data-scroll-id="' + t.hash.substr(1) + '"][data-scroll-invisible="1"]'))) {
 	
-								// Replace state with '#'.
-									history.replaceState(undefined, undefined, '#');
+										// Prevent default.
+											event.preventDefault();
 	
-								// Replace location with target hash.
-									location.replace(t.hash);
+										// Scroll to element.
+											scrollToElement(scrollPoint);
+	
+									}
+	
+								// Hash matches the current hash?
+									else if (t.hash == window.location.hash) {
+	
+										// Prevent default.
+											event.preventDefault();
+	
+										// Replace state with '#'.
+											history.replaceState(undefined, undefined, '#');
+	
+										// Replace location with target hash.
+											location.replace(t.hash);
+	
+									}
 	
 							}
 	
@@ -865,6 +958,47 @@
 	
 			// Get sheet.
 				sheet = style.sheet;
+	
+		// Mobile.
+			if (client.mobile) {
+	
+				// Prevent overscrolling on Safari/other mobile browsers.
+				// 'vh' units don't factor in the heights of various browser UI elements so our page ends up being
+				// a lot taller than it needs to be (resulting in overscroll and issues with vertical centering).
+					(function() {
+	
+						// Lsd units available?
+							if (client.flags.lsdUnits) {
+	
+								document.documentElement.style.setProperty('--viewport-height', '100dvh');
+								document.documentElement.style.setProperty('--background-height', '100lvh');
+	
+							}
+	
+						// Otherwise, use innerHeight hack.
+							else {
+	
+								var f = function() {
+									document.documentElement.style.setProperty('--viewport-height', window.innerHeight + 'px');
+									document.documentElement.style.setProperty('--background-height', (window.innerHeight + 250) + 'px');
+								};
+	
+								on('load', f);
+								on('resize', f);
+								on('orientationchange', function() {
+	
+									// Update after brief delay.
+										setTimeout(function() {
+											(f)();
+										}, 100);
+	
+								});
+	
+							}
+	
+					})();
+	
+			}
 	
 		// Android.
 			if (client.os == 'android') {
@@ -940,307 +1074,367 @@
 	
 			}
 	
-		// IE.
-			else if (client.browser == 'ie') {
+	// Reorder.
+		(function() {
 	
-				// Element.matches polyfill.
-					if (!('matches' in Element.prototype))
-						Element.prototype.matches = (Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector);
+			var	breakpoints = {
+					small: '(max-width: 736px)',
+					medium: '(max-width: 980px)',
+				},
+				elements = $$('[data-reorder]');
 	
-				// Background fix.
-				// IE doesn't consistently render background images applied to body:before so as a workaround
-				// we can simply apply it directly to the body tag.
-					(function() {
+			// Initialize elements.
+				elements.forEach(function(e) {
 	
-						var a = cssRules('body::before'),
-							r;
+					var	desktop = [],
+						mobile = [],
+						state = false,
+						query,
+						a, x, ce, f;
 	
-						// Has a background?
-							if (a.length > 0) {
+					// Determine media query via "reorder-breakpoint".
 	
-								r = a[0];
+						// Attribute provided *and* it's a valid breakpoint? Use it.
+							if ('reorderBreakpoint' in e.dataset
+							&&	e.dataset.reorderBreakpoint in breakpoints)
+								query = breakpoints[e.dataset.reorderBreakpoint];
 	
-								if (r.style.width.match('calc')) {
+						// Otherwise, default to "small".
+							else
+								query = breakpoints.small;
 	
-									// Force repaint.
-										r.style.opacity = 0.9999;
+					// Get desktop order.
+						for (ce of e.childNodes) {
 	
-										setTimeout(function() {
-											r.style.opacity = 1;
-										}, 100);
+							// Not a node? Skip.
+								if (ce.nodeType != 1)
+									continue;
+	
+							// Add to desktop order.
+								desktop.push(ce);
+	
+						}
+	
+					// Determine mobile order via "reorder".
+						a = e.dataset.reorder.split(',');
+	
+						for (x of a)
+							mobile.push(desktop[parseInt(x)]);
+	
+					// Create handler.
+						f = function() {
+	
+							var order = null,
+								ce;
+	
+							// Matches media query?
+								if (window.matchMedia(query).matches) {
+	
+									// Hasn't been applied yet?
+										if (!state) {
+	
+											// Mark as applied.
+												state = true;
+	
+											// Apply mobile.
+												for (ce of mobile)
+													e.appendChild(ce);
+	
+										}
 	
 								}
+	
+							// Otherwise ...
 								else {
 	
-									// Override body:before rule.
-										document.styleSheets[0].addRule('body::before', 'content: none !important;');
+									// Previously applied?
+										if (state) {
 	
-									// Copy over background styles.
-										$body.style.backgroundImage = r.style.backgroundImage.replace('url("images/', 'url("assets/images/');
-										$body.style.backgroundPosition = r.style.backgroundPosition;
-										$body.style.backgroundRepeat = r.style.backgroundRepeat;
-										$body.style.backgroundColor = r.style.backgroundColor;
-										$body.style.backgroundAttachment = 'fixed';
-										$body.style.backgroundSize = r.style.backgroundSize;
+											// Unmark as applied.
+												state = false;
+	
+											// Apply desktop.
+												for (ce of desktop)
+													e.appendChild(ce);
+	
+										}
 	
 								}
 	
-							}
+						};
 	
-					})();
+					// Add event listeners.
+						on('resize', f);
+						on('orientationchange', f);
+						on('load', f);
+						on('fullscreenchange', f);
 	
-				// Flexbox workaround.
-				// IE's flexbox implementation doesn't work when 'min-height' is used, so we can work around this
-				// by switching to 'height' but simulating the behavior of 'min-height' via JS.
-					(function() {
-						var t, f;
+				});
 	
-						// Handler function.
-							f = function() {
+		})();
 	
-								var mh, h, s, xx, x, i;
+	// Scroll events.
+		var scrollEvents = {
 	
-								// Wrapper.
-									x = $('#wrapper');
+			/**
+			 * Items.
+			 * @var {array}
+			 */
+			items: [],
 	
-									x.style.height = 'auto';
+			/**
+			 * Adds an event.
+			 * @param {object} o Options.
+			 */
+			add: function(o) {
 	
-									if (x.scrollHeight <= innerHeight)
-										x.style.height = '100vh';
+				this.items.push({
+					element: o.element,
+					triggerElement: (('triggerElement' in o && o.triggerElement) ? o.triggerElement : o.element),
+					enter: ('enter' in o ? o.enter : null),
+					leave: ('leave' in o ? o.leave : null),
+					mode: ('mode' in o ? o.mode : 1),
+					offset: ('offset' in o ? o.offset : 0),
+					initialState: ('initialState' in o ? o.initialState : null),
+					state: false,
+				});
 	
-								// Containers with full modifier.
-									xx = $$('.container.full');
+			},
 	
-									for (i=0; i < xx.length; i++) {
+			/**
+			 * Handler.
+			 */
+			handler: function() {
 	
-										x = xx[i];
-										s = getComputedStyle(x);
+				var	height, top, bottom, scrollPad;
 	
-										// Get min-height.
-											x.style.minHeight = '';
-											x.style.height = '';
+				// Determine values.
+					if (client.os == 'ios') {
 	
-											mh = s.minHeight;
+						height = document.documentElement.clientHeight;
+						top = document.body.scrollTop + window.scrollY;
+						bottom = top + height;
+						scrollPad = 125;
 	
-										// Get height.
-											x.style.minHeight = 0;
-											x.style.height = '';
+					}
+					else {
 	
-											h = s.height;
+						height = document.documentElement.clientHeight;
+						top = document.documentElement.scrollTop;
+						bottom = top + height;
+						scrollPad = 0;
 	
-										// Zero min-height? Do nothing.
-											if (mh == 0)
-												continue;
+					}
 	
-										// Set height.
-											x.style.height = (h > mh ? 'auto' : mh);
+				// Step through items.
+					scrollEvents.items.forEach(function(item) {
+	
+						var bcr, elementTop, elementBottom, state, a, b;
+	
+						// No enter/leave handlers? Bail.
+							if (!item.enter
+							&&	!item.leave)
+								return true;
+	
+						// No trigger element, or not visible? Bail.
+							if (!item.triggerElement
+							||	item.triggerElement.offsetParent === null)
+								return true;
+	
+						// Get element position.
+							bcr = item.triggerElement.getBoundingClientRect();
+							elementTop = top + Math.floor(bcr.top);
+							elementBottom = elementTop + bcr.height;
+	
+						// Determine state.
+	
+							// Initial state exists?
+								if (item.initialState !== null) {
+	
+									// Use it for this check.
+										state = item.initialState;
+	
+									// Clear it.
+										item.initialState = null;
+	
+								}
+	
+							// Otherwise, determine state from mode/position.
+								else {
+	
+									switch (item.mode) {
+	
+										// Element falls within viewport.
+											case 1:
+											default:
+	
+												// State.
+													state = (bottom > (elementTop - item.offset) && top < (elementBottom + item.offset));
+	
+												break;
+	
+										// Viewport midpoint falls within element.
+											case 2:
+	
+												// Midpoint.
+													a = (top + (height * 0.5));
+	
+												// State.
+													state = (a > (elementTop - item.offset) && a < (elementBottom + item.offset));
+	
+												break;
+	
+										// Viewport midsection falls within element.
+											case 3:
+	
+												// Upper limit (25%-).
+													a = top + (height * 0.25);
+	
+													if (a - (height * 0.375) <= 0)
+														a = 0;
+	
+												// Lower limit (-75%).
+													b = top + (height * 0.75);
+	
+													if (b + (height * 0.375) >= document.body.scrollHeight - scrollPad)
+														b = document.body.scrollHeight + scrollPad;
+	
+												// State.
+													state = (b > (elementTop - item.offset) && a < (elementBottom + item.offset));
+	
+												break;
 	
 									}
 	
-							};
+								}
 	
-						// Do an initial call of the handler.
-							(f)();
+						// State changed?
+							if (state != item.state) {
 	
-						// Add event listeners.
-							on('resize', function() {
+								// Update state.
+									item.state = state;
 	
-								clearTimeout(t);
+								// Call handler.
+									if (item.state) {
 	
-								t = setTimeout(f, 250);
+										// Enter handler exists?
+											if (item.enter) {
 	
-							});
+												// Call it.
+													(item.enter).apply(item.element);
 	
-							on('load', f);
+												// No leave handler? Unbind enter handler (so we don't check this element again).
+													if (!item.leave)
+														item.enter = null;
 	
-					})();
+											}
 	
-			}
+									}
+									else {
 	
-		// Edge.
-			else if (client.browser == 'edge') {
+										// Leave handler exists?
+											if (item.leave) {
 	
-				// Columned container fix.
-				// Edge seems to miscalculate column widths in some instances resulting in a nasty wrapping bug.
-				// Workaround = left-offset the last column in each columned container by -1px.
-					(function() {
+												// Call it.
+													(item.leave).apply(item.element);
 	
-						var xx = $$('.container > .inner > div:last-child'),
-							x, y, i;
+												// No enter handler? Unbind leave handler (so we don't check this element again).
+													if (!item.enter)
+														item.leave = null;
 	
-						// Step through last columns.
-							for(i=0; i < xx.length; i++) {
-	
-								x = xx[i];
-								y = getComputedStyle(x.parentNode);
-	
-								// Parent container not columned? Skip.
-									if (y.display != 'flex'
-									&&	y.display != 'inline-flex')
-										continue;
-	
-								// Offset by -1px.
-									x.style.marginLeft = '-1px';
-	
-							}
-	
-					})();
-	
-			}
-	
-		// Object-fit polyfill.
-			if (!client.canUse('object-fit')) {
-	
-				// Image.
-					(function() {
-	
-						var xx = $$('.image[data-position]'),
-							x, w, c, i, src;
-	
-						for (i=0; i < xx.length; i++) {
-	
-							// Element, img.
-								x = xx[i];
-								c = x.firstElementChild;
-	
-								// Not an IMG? Strip off wrapper.
-									if (c.tagName != 'IMG') {
-	
-										w = c;
-										c = c.firstElementChild;
+											}
 	
 									}
 	
-							// Get src.
-								if (c.parentNode.classList.contains('deferred')) {
+							}
 	
-									c.parentNode.classList.remove('deferred');
-									src = c.getAttribute('data-src');
-									c.removeAttribute('data-src');
+					});
 	
-								}
-								else
-									src = c.getAttribute('src');
+			},
 	
-							// Set src as element background.
-								c.style['backgroundImage'] = 'url(\'' + src + '\')';
-								c.style['backgroundSize'] = 'cover';
-								c.style['backgroundPosition'] = x.dataset.position;
-								c.style['backgroundRepeat'] = 'no-repeat';
+			/**
+			 * Initializes scroll events.
+			 */
+			init: function() {
 	
-							// Clear src.
-								c.src = 'data:image/svg+xml;charset=utf8,' + escape('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"></svg>');
+				// Bind handler to events.
+					on('load', this.handler);
+					on('resize', this.handler);
+					on('scroll', this.handler);
 	
-							// Hack: Fix "full column" elements (columned containers only).
-								if (x.classList.contains('full')
-								&&	(x.parentNode && x.parentNode.classList.contains('full'))
-								&&	(x.parentNode.parentNode && x.parentNode.parentNode.parentNode && x.parentNode.parentNode.parentNode.classList.contains('container'))
-								&&	x.parentNode.children.length == 1) {
-	
-									(function(x, w) {
-	
-										var	p = x.parentNode.parentNode,
-											f = function() {
-	
-												// Set height to zero.
-													x.style['height'] = '0px';
-	
-												// Clear timeout.
-													clearTimeout(t);
-	
-												// Update after a short delay.
-													t = setTimeout(function() {
-	
-														// Container inner is in "row" mode? Set fixed height.
-															if (getComputedStyle(p).flexDirection == 'row') {
-	
-																// Wrapper (if it exists).
-																	if (w)
-																		w.style['height'] = '100%';
-	
-																// Element.
-																	x.style['height'] = (p.scrollHeight + 1) + 'px';
-	
-															}
-	
-														// Otherwise, revert to auto height ...
-															else {
-	
-																// Wrapper (if it exists).
-																	if (w)
-																		w.style['height'] = 'auto';
-	
-																// Element.
-																	x.style['height'] = 'auto';
-	
-															}
-	
-													}, 125);
-	
-											},
-											t;
-	
-										// Call handler on resize, load.
-											on('resize', f);
-											on('load', f);
-	
-										// Initial call.
-											(f)();
-	
-									})(x, w);
-	
-								}
-	
-						}
-	
-					})();
-	
-				// Gallery.
-					(function() {
-	
-						var xx = $$('.gallery img'),
-							x, p, i, src;
-	
-						for (i=0;i < xx.length; i++) {
-	
-							// Img, parent.
-								x = xx[i];
-								p = x.parentNode;
-	
-							// Get src.
-								if (p.classList.contains('deferred')) {
-	
-									p.classList.remove('deferred');
-									src = x.getAttribute('data-src');
-	
-								}
-								else
-									src = x.getAttribute('src');
-	
-							// Set src as parent background.
-								p.style['backgroundImage'] = 'url(\'' + src + '\')';
-								p.style['backgroundSize'] = 'cover';
-								p.style['backgroundPosition'] = 'center';
-								p.style['backgroundRepeat'] = 'no-repeat';
-	
-							// Hide img.
-								x.style['opacity'] = '0';
-	
-						}
-	
-					})();
+				// Do initial handler call.
+					(this.handler)();
 	
 			}
+		};
+	
+		// Initialize.
+			scrollEvents.init();
 	
 	// Deferred.
 		(function() {
 	
 			var items = $$('.deferred'),
-				f;
+				loadHandler, enterHandler;
 	
-			// Polyfill: NodeList.forEach()
-				if (!('forEach' in NodeList.prototype))
-					NodeList.prototype.forEach = Array.prototype.forEach;
+			// Handlers.
+	
+				/**
+				 * "On Load" handler.
+				 */
+				loadHandler = function() {
+	
+					var i = this,
+						p = this.parentElement;
+	
+					// Not "done" yet? Bail.
+						if (i.dataset.src !== 'done')
+							return;
+	
+					// Show image.
+						if (Date.now() - i._startLoad < 375) {
+	
+							p.classList.remove('loading');
+							p.style.backgroundImage = 'none';
+							i.style.transition = '';
+							i.style.opacity = 1;
+	
+						}
+						else {
+	
+							p.classList.remove('loading');
+							i.style.opacity = 1;
+	
+							setTimeout(function() {
+								i.style.backgroundImage = 'none';
+								i.style.transition = '';
+							}, 375);
+	
+						}
+	
+				};
+	
+				/**
+				 * "On Enter" handler.
+				 */
+				enterHandler = function() {
+	
+					var	i = this,
+						p = this.parentElement,
+						src;
+	
+					// Get src, mark as "done".
+						src = i.dataset.src;
+						i.dataset.src = 'done';
+	
+					// Mark parent as loading.
+						p.classList.add('loading');
+	
+					// Swap placeholder for real image src.
+						i._startLoad = Date.now();
+						i.src = src;
+	
+				};
 	
 			// Initialize items.
 				items.forEach(function(p) {
@@ -1248,96 +1442,30 @@
 					var i = p.firstElementChild;
 	
 					// Set parent to placeholder.
-						p.style.backgroundImage = 'url(' + i.src + ')';
-						p.style.backgroundSize = '100% 100%';
-						p.style.backgroundPosition = 'top left';
-						p.style.backgroundRepeat = 'no-repeat';
+						if (!p.classList.contains('enclosed')) {
+	
+							p.style.backgroundImage = 'url(' + i.src + ')';
+							p.style.backgroundSize = '100% 100%';
+							p.style.backgroundPosition = 'top left';
+							p.style.backgroundRepeat = 'no-repeat';
+	
+						}
 	
 					// Hide image.
 						i.style.opacity = 0;
 						i.style.transition = 'opacity 0.375s ease-in-out';
 	
 					// Load event.
-						i.addEventListener('load', function(event) {
+						i.addEventListener('load', loadHandler);
 	
-							// Not "done" yet? Bail.
-								if (i.dataset.src !== 'done')
-									return;
-	
-							// Show image.
-								if (Date.now() - i._startLoad < 375) {
-	
-									p.classList.remove('loading');
-									p.style.backgroundImage = 'none';
-									i.style.transition = '';
-									i.style.opacity = 1;
-	
-								}
-								else {
-	
-									p.classList.remove('loading');
-									i.style.opacity = 1;
-	
-									setTimeout(function() {
-										p.style.backgroundImage = 'none';
-									}, 375);
-	
-								}
-	
+					// Add to scroll events.
+						scrollEvents.add({
+							element: i,
+							enter: enterHandler,
+							offset: 250
 						});
 	
 				});
-	
-			// Handler function.
-				f = function() {
-	
-					var	height = document.documentElement.clientHeight,
-						top = (client.os == 'ios' ? document.body.scrollTop : document.documentElement.scrollTop),
-						bottom = top + height;
-	
-					// Step through items.
-						items.forEach(function(p) {
-	
-							var i = p.firstElementChild;
-	
-							// Not visible? Bail.
-								if (i.offsetParent === null)
-									return true;
-	
-							// "Done" already? Bail.
-								if (i.dataset.src === 'done')
-									return true;
-	
-							// Get image position.
-								var	x = i.getBoundingClientRect(),
-									imageTop = top + Math.floor(x.top) - height,
-									imageBottom = top + Math.ceil(x.bottom) + height,
-									src;
-	
-							// Falls within viewable area of viewport?
-								if (imageTop <= bottom && imageBottom >= top) {
-	
-									// Get src, mark as "done".
-										src = i.dataset.src;
-										i.dataset.src = 'done';
-	
-									// Mark parent as loading.
-										p.classList.add('loading');
-	
-									// Swap placeholder for real image src.
-										i._startLoad = Date.now();
-										i.src = src;
-	
-								}
-	
-						});
-	
-				};
-	
-			// Add event listeners.
-				on('load', f);
-				on('resize', f);
-				on('scroll', f);
 	
 		})();
 
