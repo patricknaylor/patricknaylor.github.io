@@ -436,7 +436,7 @@
 				header, footer, name, hideHeader, hideFooter, disableAutoScroll,
 				h, e, ee, k,
 				locked = false,
-				doNext = function() {
+				doNextSection = function() {
 	
 					var section;
 	
@@ -448,7 +448,7 @@
 					location.href = '#' + section.id.replace(/-section$/, '');
 	
 				},
-				doPrevious = function() {
+				doPreviousSection = function() {
 	
 					var section;
 	
@@ -460,7 +460,7 @@
 					location.href = '#' + (section.matches(':first-child') ? '' : section.id.replace(/-section$/, ''));
 	
 				},
-				doFirst = function() {
+				doFirstSection = function() {
 	
 					var section;
 	
@@ -472,7 +472,7 @@
 					location.href = '#' + section.id.replace(/-section$/, '');
 	
 				},
-				doLast = function() {
+				doLastSection = function() {
 	
 					var section;
 	
@@ -486,11 +486,11 @@
 				},
 				sections = {};
 	
-			// Expose doNext, doPrevious, doFirst, doLast.
-				window._next = doNext;
-				window._previous = doPrevious;
-				window._first = doFirst;
-				window._last = doLast;
+			// Expose doNextSection, doPreviousSection, doFirstSection, doLastSection.
+				window._next = doNextSection;
+				window._previous = doPreviousSection;
+				window._first = doFirstSection;
+				window._last = doLastSection;
 	
 			// Override exposed scrollToTop.
 				window._scrollToTop = function() {
@@ -862,7 +862,7 @@
 	
 															}, 75);
 	
-													}, 500);
+													}, 500 + 250);
 	
 											}, 75);
 	
