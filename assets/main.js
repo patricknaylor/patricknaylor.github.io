@@ -317,10 +317,13 @@
 					for (i=0; i < a.length; i++) {
 	
 						// Load.
-							a[i].src = a[i].dataset.src;
+							a[i].contentWindow.location.replace(a[i].dataset.src);
+	
+						// Save initial src.
+							a[i].dataset.initialSrc = a[i].dataset.src;
 	
 						// Mark as loaded.
-							a[i].dataset.src = "";
+							a[i].dataset.src = '';
 	
 					}
 	
@@ -382,10 +385,17 @@
 								continue;
 	
 						// Mark as unloaded.
-							a[i].dataset.src = a[i].src;
+	
+							// IFRAME was previously loaded by loadElements()? Use initialSrc.
+								if ('initialSrc' in a[i].dataset)
+									a[i].dataset.src = a[i].dataset.initialSrc;
+	
+							// Otherwise, just use src.
+								else
+									a[i].dataset.src = a[i].src;
 	
 						// Unload.
-							a[i].src = '';
+							a[i].contentWindow.location.replace('about:blank');
 	
 					}
 	
@@ -713,51 +723,51 @@
 								if (location.hash == '#home')
 									history.replaceState(null, null, '#');
 	
-							// Get options.
-								name = (section ? section.id.replace(/-section$/, '') : null);
-								hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
-								hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
-								disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
+						// Get options.
+							name = (section ? section.id.replace(/-section$/, '') : null);
+							hideHeader = name ? ((name in sections) && ('hideHeader' in sections[name]) && sections[name].hideHeader) : false;
+							hideFooter = name ? ((name in sections) && ('hideFooter' in sections[name]) && sections[name].hideFooter) : false;
+							disableAutoScroll = name ? ((name in sections) && ('disableAutoScroll' in sections[name]) && sections[name].disableAutoScroll) : false;
 	
-							// Deactivate current section.
+						// Deactivate current section.
 	
-								// Hide header and/or footer (if necessary).
+							// Hide header and/or footer (if necessary).
 	
-									// Header.
-										if (header && hideHeader) {
+								// Header.
+									if (header && hideHeader) {
 	
-											header.classList.add('hidden');
+										header.classList.add('hidden');
 	
-											setTimeout(function() {
-												header.style.display = 'none';
-											}, 250);
+										setTimeout(function() {
+											header.style.display = 'none';
+										}, 250);
 	
-										}
+									}
 	
-									// Footer.
-										if (footer && hideFooter) {
+								// Footer.
+									if (footer && hideFooter) {
 	
-											footer.classList.add('hidden');
+										footer.classList.add('hidden');
 	
-											setTimeout(function() {
-												footer.style.display = 'none';
-											}, 250);
+										setTimeout(function() {
+											footer.style.display = 'none';
+										}, 250);
 	
-										}
+									}
 	
-								// Deactivate.
-									currentSection = $('#main > .inner > section:not(.inactive)');
+							// Deactivate.
+								currentSection = $('#main > .inner > section:not(.inactive)');
 	
-									if (currentSection) {
+								if (currentSection) {
 	
-										// Get current height.
-											currentSectionHeight = currentSection.offsetHeight;
+									// Get current height.
+										currentSectionHeight = currentSection.offsetHeight;
 	
-										// Deactivate.
-											currentSection.classList.add('inactive');
+									// Deactivate.
+										currentSection.classList.add('inactive');
 	
-										// Unload elements.
-											unloadElements(currentSection);
+									// Unload elements.
+										unloadElements(currentSection);
 	
 										// Hide.
 											setTimeout(function() {

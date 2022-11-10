@@ -18,6 +18,8 @@ body {
 	--site-language-alignment: left;
 	--site-language-direction: ltr;
 	--site-language-flex-alignment: flex-start;
+	--site-language-indent-left: 1;
+	--site-language-indent-right: 0;
 	--viewport-height: 100vh;
 }
 
@@ -90,6 +92,8 @@ a {
 #main {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 	--border-radius-tl: 0.375rem;
 	--border-radius-tr: 0.375rem;
 	--border-radius-br: 0.375rem;
@@ -104,10 +108,6 @@ a {
 	text-align: var(--alignment);
 	z-index: 1;
 	background-color: #FFFFFF;
-	background-image: url('');
-	background-size: 256px;
-	background-position: center;
-	background-repeat: repeat;
 	border-radius: var(--border-radius-tl) var(--border-radius-tr) var(--border-radius-br) var(--border-radius-bl);
 	transition: opacity 1s ease 0s,transform 1s ease 0s;
 }
@@ -510,6 +510,24 @@ hr:before {
 	transition: none;
 }
 
+#image01 .frame {
+	max-width: 100%;
+	width: 330px;
+	border-radius: 1rem;
+	transition: none;
+}
+
+#image01 img {
+	height: 100% !important;
+	object-fit: cover;
+	object-position: center;
+	width: 100% !important;
+}
+
+#image01 .frame img {
+	transition: none;
+}
+
 .container {
 	position: relative;
 }
@@ -685,6 +703,8 @@ hr:before {
 #container02 {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 }
 
 #container02 > .wrapper {
@@ -829,11 +849,15 @@ hr:before {
 	width: calc(50% + (var(--gutters) / 2));
 	--alignment: left;
 	--flex-alignment: flex-start;
+	--indent-left: 1;
+	--indent-right: 0;
 }
 
 .container.style1 {
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 }
 
 .container.style1:not(:first-child) {
@@ -976,18 +1000,32 @@ hr:before {
 	width: calc(50% + (var(--gutters) / 2));
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
+}
+
+#container06 > .wrapper > .inner > :nth-child(1) {
+	width: calc(50% + (var(--gutters) / 2));
+}
+
+#container06 > .wrapper > .inner > :nth-child(2) {
+	width: calc(50% + (var(--gutters) / 2));
 }
 
 #container03 > .wrapper > .inner > :nth-child(1) {
 	width: calc(50% + (var(--gutters) / 2));
 	--alignment: left;
 	--flex-alignment: flex-start;
+	--indent-left: 1;
+	--indent-right: 0;
 }
 
 #container03 > .wrapper > .inner > :nth-child(2) {
 	width: calc(50% + (var(--gutters) / 2));
 	--alignment: center;
 	--flex-alignment: center;
+	--indent-left: 1;
+	--indent-right: 1;
 }
 
 h1, h2, h3, p {
@@ -1400,6 +1438,10 @@ h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 
 		margin-bottom: -2.875rem !important;
 	}
 	
+	#buttons01 {
+		gap: 0.625rem;
+	}
+	
 	#buttons01:not(:first-child) {
 		margin-top: 1.54725rem !important;
 	}
@@ -1471,6 +1513,13 @@ h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 
 	}
 	
 	#image03 img {
+		height: 100% !important;
+		object-fit: cover;
+		object-position: center;
+		width: 100% !important;
+	}
+	
+	#image01 img {
 		height: 100% !important;
 		object-fit: cover;
 		object-position: center;
@@ -1681,6 +1730,8 @@ h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 
 	#container02 > .wrapper > .inner > :nth-child(2) {
 		--alignment: left;
 		--flex-alignment: flex-start;
+		--indent-left: 1;
+		--indent-right: 0;
 		min-height: 100% !important;
 		width: 100% !important;
 	}
@@ -1793,6 +1844,18 @@ h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 
 	#container04 > .wrapper > .inner > :nth-child(2) {
 		--alignment: center;
 		--flex-alignment: center;
+		--indent-left: 1;
+		--indent-right: 1;
+		min-height: 100% !important;
+		width: 100% !important;
+	}
+	
+	#container06 > .wrapper > .inner > :nth-child(1) {
+		min-height: 100% !important;
+		width: 100% !important;
+	}
+	
+	#container06 > .wrapper > .inner > :nth-child(2) {
 		min-height: 100% !important;
 		width: 100% !important;
 	}
@@ -1800,6 +1863,8 @@ h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 
 	#container03 > .wrapper > .inner > :nth-child(1) {
 		--alignment: left;
 		--flex-alignment: flex-start;
+		--indent-left: 1;
+		--indent-right: 0;
 		min-height: 100% !important;
 		width: 100% !important;
 	}
@@ -1807,6 +1872,8 @@ h1.style3 span.p:nth-child(n + 2), h2.style3 span.p:nth-child(n + 2), h3.style3 
 	#container03 > .wrapper > .inner > :nth-child(2) {
 		--alignment: center;
 		--flex-alignment: center;
+		--indent-left: 1;
+		--indent-right: 1;
 		min-height: 100% !important;
 		width: 100% !important;
 	}
