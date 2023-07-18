@@ -367,7 +367,11 @@ body.is-instant:after {
 }
 
 hr {
+	align-items: center;
 	border: 0;
+	display: flex;
+	justify-content: var(--flex-alignment);
+	min-height: 1rem;
 	padding: 0;
 	position: relative;
 	width: 100%;
@@ -375,51 +379,48 @@ hr {
 
 hr:before {
 	content: '';
-	display: inline-block;
-	max-width: 100%;
-	vertical-align: middle;
 }
 
 #divider05:before {
 	width: 41rem;
-	border-top: solid 1px #FFFFFF;
+	background-color: #FFFFFF;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider08:before {
 	width: 41rem;
-	border-top: solid 1px #FFFFFF;
+	background-color: #FFFFFF;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider01:before {
 	width: 41rem;
-	border-top: solid 1px #D1D1D1;
+	background-color: #D1D1D1;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider03:before {
 	width: 41rem;
-	border-top: solid 1px #D1D1D1;
+	background-color: #D1D1D1;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider02:before {
 	width: 41rem;
-	border-top: solid 1px #D1D1D1;
+	background-color: #D1D1D1;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider09:before {
 	width: 41rem;
-	border-top: solid 1px #D1D1D1;
+	background-color: #D1D1D1;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider06:not(:first-child) {
@@ -432,9 +433,9 @@ hr:before {
 
 #divider06:before {
 	width: 41rem;
-	border-top: solid 1px #D1D1D1;
+	background-color: #D1D1D1;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider07:not(:first-child) {
@@ -447,16 +448,16 @@ hr:before {
 
 #divider07:before {
 	width: 41rem;
-	border-top: solid 1px #D1D1D1;
+	background-color: #D1D1D1;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 #divider04:before {
 	width: 41rem;
-	border-top: solid 1px #FFFFFF;
+	background-color: #FFFFFF;
 	height: 1px;
-	margin-top: -0.5px;
+	border-radius: 0px;
 }
 
 .image {
