@@ -1532,7 +1532,8 @@
 					triggerElement: (('triggerElement' in o && o.triggerElement) ? o.triggerElement : o.element),
 					enter: ('enter' in o ? o.enter : null),
 					leave: ('leave' in o ? o.leave : null),
-					mode: ('mode' in o ? o.mode : 3),
+					mode: ('mode' in o ? o.mode : 4),
+					threshold: ('threshold' in o ? o.threshold : 0.25),
 					offset: ('offset' in o ? o.offset : 0),
 					initialState: ('initialState' in o ? o.initialState : null),
 					state: false,
@@ -1568,7 +1569,8 @@
 				// Step through items.
 					scrollEvents.items.forEach(function(item) {
 		
-						var bcr, elementTop, elementBottom, state, a, b;
+						var	elementTop, elementBottom, viewportTop, viewportBottom,
+							bcr, pad, state, a, b;
 		
 						// No enter/leave handlers? Bail.
 							if (!item.enter
@@ -1650,19 +1652,55 @@
 											case 3:
 		
 												// Upper limit (25%-).
-													a = top + (height * 0.25);
+													a = top + (height * (item.threshold));
 		
 													if (a - (height * 0.375) <= 0)
 														a = 0;
 		
 												// Lower limit (-75%).
-													b = top + (height * 0.75);
+													b = top + (height * (1 - item.threshold));
 		
 													if (b + (height * 0.375) >= document.body.scrollHeight - scrollPad)
 														b = document.body.scrollHeight + scrollPad;
 		
 												// State.
 													state = (b > (elementTop - item.offset) && a < (elementBottom + item.offset));
+		
+												break;
+		
+										// Viewport intersects with element.
+											case 4:
+		
+												// Calculate pad, viewport top, viewport bottom.
+													pad = height * item.threshold;
+													viewportTop = (top + pad);
+													viewportBottom = (bottom - pad);
+		
+												// Compensate for elements at the very top or bottom of the page.
+													if (Math.floor(top) <= pad)
+														viewportTop = top;
+		
+													if (Math.ceil(bottom) >= (document.body.scrollHeight - pad))
+														viewportBottom = bottom;
+		
+												// Element is smaller than viewport?
+													if ((viewportBottom - viewportTop) >= (elementBottom - elementTop)) {
+		
+														state =	(
+																(elementTop >= viewportTop && elementBottom <= viewportBottom)
+															||	(elementTop >= viewportTop && elementTop <= viewportBottom)
+															||	(elementBottom >= viewportTop && elementBottom <= viewportBottom)
+														);
+		
+													}
+		
+												// Otherwise, viewport is smaller than element.
+													else
+														state =	(
+																(viewportTop >= elementTop && viewportBottom <= elementBottom)
+															||	(elementTop >= viewportTop && elementTop <= viewportBottom)
+															||	(elementBottom >= viewportTop && elementBottom <= viewportBottom)
+														);
 		
 												break;
 		
