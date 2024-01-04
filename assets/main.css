@@ -413,6 +413,13 @@ hr:before {
 	border-radius: 0px;
 }
 
+#divider11:before {
+	width: 41rem;
+	background-color: #D1D1D1;
+	height: 1px;
+	border-radius: 0px;
+}
+
 #divider02:before {
 	width: 41rem;
 	background-color: #D1D1D1;
@@ -1335,6 +1342,10 @@ th {
 	}
 	
 	#divider03:before {
+		width: 41rem;
+	}
+	
+	#divider11:before {
 		width: 41rem;
 	}
 	
