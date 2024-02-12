@@ -525,7 +525,7 @@ hr:before {
 }
 
 #image02 .frame {
-	width: 16.75rem;
+	width: 15.5rem;
 	border-radius: 100%;
 	transition: none;
 }
@@ -753,11 +753,11 @@ hr:before {
 }
 
 #container05 > .wrapper > .inner > :nth-child(1) {
-	width: calc(50% + (var(--gutters) / 2));
+	width: calc(55% + (var(--gutters) / 2));
 }
 
 #container05 > .wrapper > .inner > :nth-child(2) {
-	width: calc(50% + (var(--gutters) / 2));
+	width: calc(45% + (var(--gutters) / 2));
 }
 
 .container.style1 {
@@ -1398,7 +1398,7 @@ th {
 	}
 	
 	#image02 .frame {
-		width: 16.75rem;
+		width: 15.5rem;
 	}
 	
 	#image04 img {
