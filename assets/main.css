@@ -917,6 +917,14 @@ hr:before {
 	--margin-right: auto;
 }
 
+#container02 > .wrapper > .inner > :nth-child(1) {
+	width: calc(50% + (var(--gutters) / 2));
+}
+
+#container02 > .wrapper > .inner > :nth-child(2) {
+	width: calc(50% + (var(--gutters) / 2));
+}
+
 #container10 > .wrapper > .inner > :nth-child(1) {
 	width: calc(25% + (var(--gutters) / 2));
 }
@@ -1678,6 +1686,16 @@ th {
 		--indent-right: 1;
 		--margin-left: auto;
 		--margin-right: auto;
+		min-height: 100% !important;
+		width: 100% !important;
+	}
+	
+	#container02 > .wrapper > .inner > :nth-child(1) {
+		min-height: 100% !important;
+		width: 100% !important;
+	}
+	
+	#container02 > .wrapper > .inner > :nth-child(2) {
 		min-height: 100% !important;
 		width: 100% !important;
 	}
