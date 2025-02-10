@@ -174,6 +174,17 @@
 				return o;
 		
 			}()),
+			ready = {
+				list: [],
+				add: function(f) {
+					this.list.push(f);
+				},
+				run: function() {
+					this.list.forEach((f) => {
+						f();
+					});
+				},
+			},
 			trigger = function(t) {
 				dispatchEvent(new Event(t));
 			},
@@ -439,10 +450,10 @@
 		
 						}
 		
-				// Deferred script tags.
+				// Embeds.
 		
-					// Get list of deferred script tags.
-						a = parent.querySelectorAll('deferred-script');
+					// Get unloaded embeds.
+						a = parent.querySelectorAll('unloaded-script');
 		
 					// Step through list.
 						for (i=0; i < a.length; i++) {
@@ -450,8 +461,8 @@
 							// Create replacement script tag.
 								x = document.createElement('script');
 		
-							// Set deferred data attribute (so we can unload this element later).
-								x.setAttribute('data-deferred', '');
+							// Set "loaded" data attribute (so we can unload this element later).
+								x.setAttribute('data-loaded', '');
 		
 							// Set "src" attribute (if present).
 								if (a[i].getAttribute('src'))
@@ -465,6 +476,25 @@
 								a[i].replaceWith(x);
 		
 						}
+		
+				// Everything else.
+		
+					// Create "loadelements" event.
+						x = new Event('loadelements');
+		
+					// Get unloaded elements.
+						a = parent.querySelectorAll('[data-unloaded]');
+		
+					// Step through list.
+						a.forEach((element) => {
+		
+							// Clear attribute.
+								element.removeAttribute('data-unloaded');
+		
+							// Dispatch event.
+								element.dispatchEvent(x);
+		
+						});
 		
 			},
 			unloadElements = function(parent) {
@@ -521,18 +551,18 @@
 						if (e)
 							e.blur();
 		
-				// Deferred script tags.
+				// Embeds.
 				// NOTE: Disabled for now. May want to bring this back later.
 				/*
 		
-					// Get list of (previously deferred) script tags.
-						a = parent.querySelectorAll('script[data-deferred]');
+					// Get loaded embeds.
+						a = parent.querySelectorAll('script[data-loaded]');
 		
 					// Step through list.
 						for (i=0; i < a.length; i++) {
 		
-							// Create replacement deferred-script tag.
-								x = document.createElement('deferred-script');
+							// Create replacement unloaded-script tag.
+								x = document.createElement('unloaded-script');
 		
 							// Set "src" attribute (if present).
 								if (a[i].getAttribute('src'))
@@ -589,6 +619,7 @@
 				header, footer, name, hideHeader, hideFooter, disableAutoScroll,
 				h, e, ee, k,
 				locked = false,
+				title = document.title,
 				scrollPointParent = function(target) {
 		
 					while (target) {
@@ -932,11 +963,17 @@
 									// Deactivate.
 										currentSection.classList.add('inactive');
 		
+									// Reset title.
+										document.title = title;
+		
 									// Unload elements.
 										unloadElements(currentSection);
 		
 									// Reset section change elements.
 										resetSectionChangeElements(currentSection);
+		
+									// Clear timeout (if present).
+										clearTimeout(window._sectionTimeoutId);
 		
 										// Hide.
 											setTimeout(function() {
@@ -945,6 +982,10 @@
 											}, 250);
 		
 									}
+		
+							// Update title.
+								if (section.dataset.title)
+									document.title = section.dataset.title + ' - ' + title;
 		
 							// Activate target section.
 								setTimeout(function() {
@@ -1179,18 +1220,27 @@
 					// Activate initial section.
 						initialSection.classList.add('active');
 		
-					// Load elements.
-						loadElements(initialSection);
+					// Add ready event.
+						ready.add(() => {
 		
-						if (header)
-							loadElements(header);
+							// Update title.
+								if (initialSection.dataset.title)
+									document.title = initialSection.dataset.title + ' - ' + title;
 		
-						if (footer)
-							loadElements(footer);
+							// Load elements.
+								loadElements(initialSection);
 		
-					// Scroll to top (if not disabled for this section).
-						if (!disableAutoScroll)
-							scrollToElement(null, 'instant');
+								if (header)
+									loadElements(header);
+		
+								if (footer)
+									loadElements(footer);
+		
+							// Scroll to top (if not disabled for this section).
+								if (!disableAutoScroll)
+									scrollToElement(null, 'instant');
+		
+						});
 		
 				// Load event.
 					on('load', function() {
@@ -1848,32 +1898,35 @@
 				loadHandler = function() {
 		
 					var i = this,
-						p = this.parentElement;
+						p = this.parentElement,
+						duration = 375;
 		
 					// Not "done" yet? Bail.
 						if (i.dataset.src !== 'done')
 							return;
 		
+					// Image loaded faster than expected? Reduce transition duration.
+						if (Date.now() - i._startLoad < duration)
+							duration = 175;
+		
+					// Set transition duration.
+						i.style.transitionDuration = (duration / 1000.00) + 's';
+		
 					// Show image.
-						if (Date.now() - i._startLoad < 375) {
+						p.classList.remove('loading');
+						i.style.opacity = 1;
 		
-							p.classList.remove('loading');
-							p.style.backgroundImage = 'none';
-							i.style.transition = '';
-							i.style.opacity = 1;
+						setTimeout(function() {
 		
-						}
-						else {
-		
-							p.classList.remove('loading');
-							i.style.opacity = 1;
-		
-							setTimeout(function() {
+							// Clear background image.
 								i.style.backgroundImage = 'none';
-								i.style.transition = '';
-							}, 375);
 		
-						}
+							// Clear transition properties.
+								i.style.transitionProperty = '';
+								i.style.transitionTimingFunction = '';
+								i.style.transitionDuration = '';
+		
+						}, duration);
 		
 				};
 		
@@ -1916,7 +1969,10 @@
 		
 					// Hide image.
 						i.style.opacity = 0;
-						i.style.transition = 'opacity 0.375s ease-in-out';
+		
+					// Set transition properties.
+						i.style.transitionProperty = 'opacity';
+						i.style.transitionTimingFunction = 'ease-in-out';
 		
 					// Load event.
 						i.addEventListener('load', loadHandler);
@@ -1931,5 +1987,8 @@
 				});
 		
 		})();
+	
+	// Run ready handlers.
+		ready.run();
 
 })();
