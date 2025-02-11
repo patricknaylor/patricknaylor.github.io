@@ -481,6 +481,36 @@ hr:before {
 	border-radius: 0px;
 }
 
+#divider14:not(:first-child) {
+	margin-top: 1rem !important;
+}
+
+#divider14:not(:last-child) {
+	margin-bottom: 1rem !important;
+}
+
+#divider14:before {
+	width: 41rem;
+	background-color: #D1D1D1;
+	height: 1px;
+	border-radius: 0px;
+}
+
+#divider13:not(:first-child) {
+	margin-top: 1rem !important;
+}
+
+#divider13:not(:last-child) {
+	margin-bottom: 1rem !important;
+}
+
+#divider13:before {
+	width: 41rem;
+	background-color: #D1D1D1;
+	height: 1px;
+	border-radius: 0px;
+}
+
 #divider04:not(:first-child) {
 	margin-top: 1rem !important;
 }
@@ -697,6 +727,42 @@ hr:before {
 }
 
 #image04 .frame img {
+	transition: none;
+}
+
+#image10 .frame {
+	max-width: 100%;
+	width: 302px;
+	border-radius: 1rem;
+	transition: none;
+}
+
+#image10 img {
+	height: 100% !important;
+	object-fit: cover;
+	object-position: center;
+	width: 100% !important;
+}
+
+#image10 .frame img {
+	transition: none;
+}
+
+#image11 .frame {
+	max-width: 100%;
+	width: 307px;
+	border-radius: 1rem;
+	transition: none;
+}
+
+#image11 img {
+	height: 100% !important;
+	object-fit: cover;
+	object-position: center;
+	width: 100% !important;
+}
+
+#image11 .frame img {
 	transition: none;
 }
 
@@ -1070,6 +1136,14 @@ hr:before {
 }
 
 #container04 > .wrapper > .inner > :nth-child(2) {
+	width: calc(50% + (var(--gutters) / 2));
+}
+
+#container11 > .wrapper > .inner > :nth-child(1) {
+	width: calc(50% + (var(--gutters) / 2));
+}
+
+#container11 > .wrapper > .inner > :nth-child(2) {
 	width: calc(50% + (var(--gutters) / 2));
 }
 
@@ -1515,6 +1589,30 @@ h1.style1 span.p:nth-child(n + 2), h2.style1 span.p:nth-child(n + 2), h3.style1 
 		width: 41rem;
 	}
 	
+	#divider14:not(:first-child) {
+		margin-top: 1rem !important;
+	}
+	
+	#divider14:not(:last-child) {
+		margin-bottom: 1rem !important;
+	}
+	
+	#divider14:before {
+		width: 41rem;
+	}
+	
+	#divider13:not(:first-child) {
+		margin-top: 1rem !important;
+	}
+	
+	#divider13:not(:last-child) {
+		margin-bottom: 1rem !important;
+	}
+	
+	#divider13:before {
+		width: 41rem;
+	}
+	
 	#divider04:not(:first-child) {
 		margin-top: 1rem !important;
 	}
@@ -1598,6 +1696,20 @@ h1.style1 span.p:nth-child(n + 2), h2.style1 span.p:nth-child(n + 2), h3.style1 
 	}
 	
 	#image04 img {
+		height: 100% !important;
+		object-fit: cover;
+		object-position: center;
+		width: 100% !important;
+	}
+	
+	#image10 img {
+		height: 100% !important;
+		object-fit: cover;
+		object-position: center;
+		width: 100% !important;
+	}
+	
+	#image11 img {
 		height: 100% !important;
 		object-fit: cover;
 		object-position: center;
@@ -1861,6 +1973,16 @@ h1.style1 span.p:nth-child(n + 2), h2.style1 span.p:nth-child(n + 2), h3.style1 
 	}
 	
 	#container04 > .wrapper > .inner > :nth-child(2) {
+		min-height: 100% !important;
+		width: 100% !important;
+	}
+	
+	#container11 > .wrapper > .inner > :nth-child(1) {
+		min-height: 100% !important;
+		width: 100% !important;
+	}
+	
+	#container11 > .wrapper > .inner > :nth-child(2) {
 		min-height: 100% !important;
 		width: 100% !important;
 	}
