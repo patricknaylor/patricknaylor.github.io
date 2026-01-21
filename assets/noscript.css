@@ -2,21 +2,21 @@ body {
 	overflow: auto !important;
 }
 
-#main {
+.site-main {
 	opacity: 1.0 !important;
 	transform: none !important;
 	transition: none !important;
 	filter: none !important;
 }
 
-#main > .inner > section {
+.site-main > .inner > section {
 	opacity: 1.0 !important;
 	transform: none !important;
 	transition: none !important;
 	filter: none !important;
 }
 
-#main > .inner > section > * {
+.site-main > .inner > section > * {
 	opacity: 1.0 !important;
 	transform: none !important;
 	transition: none !important;

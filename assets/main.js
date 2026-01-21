@@ -402,6 +402,9 @@
 		
 				var a, e, x, i;
 		
+				// Trigger "startComponents" custom event.
+					$body.dispatchEvent(new CustomEvent('startComponents', { detail: { parent: parent } }));
+		
 				// IFRAMEs.
 		
 					// Get list of unloaded IFRAMEs.
@@ -410,14 +413,20 @@
 					// Step through list.
 						for (i=0; i < a.length; i++) {
 		
+							// Clone IFRAME node.
+								x = a[i].cloneNode();
+		
 							// Load.
-								a[i].contentWindow.location.replace(a[i].dataset.src);
+								x.setAttribute('src', x.dataset.src);
 		
 							// Save initial src.
-								a[i].dataset.initialSrc = a[i].dataset.src;
+								x.dataset.initialSrc = x.dataset.src;
 		
 							// Mark as loaded.
-								a[i].dataset.src = '';
+								x.dataset.src = '';
+		
+							// Replace original IFRAME node with clone node.
+								a[i].replaceWith(x);
 		
 						}
 		
@@ -511,6 +520,9 @@
 			unloadElements = function(parent) {
 		
 				var a, e, x, i;
+		
+				// Trigger "stopComponents" custom event.
+					$body.dispatchEvent(new CustomEvent('stopComponents', { detail: { parent: parent } }));
 		
 				// IFRAMEs.
 		
@@ -821,7 +833,7 @@
 		
 					var section;
 		
-					section = $('#main > .inner > section.active').nextElementSibling;
+					section = $('.site-main > .inner > section.active').nextElementSibling;
 		
 					if (!section || section.tagName != 'SECTION')
 						return;
@@ -833,7 +845,7 @@
 		
 					var section;
 		
-					section = $('#main > .inner > section.active').previousElementSibling;
+					section = $('.site-main > .inner > section.active').previousElementSibling;
 		
 					if (!section || section.tagName != 'SECTION')
 						return;
@@ -845,7 +857,7 @@
 		
 					var section;
 		
-					section = $('#main > .inner > section:first-of-type');
+					section = $('.site-main > .inner > section:first-of-type');
 		
 					if (!section || section.tagName != 'SECTION')
 						return;
@@ -857,7 +869,7 @@
 		
 					var section;
 		
-					section = $('#main > .inner > section:last-of-type');
+					section = $('.site-main > .inner > section:last-of-type');
 		
 					if (!section || section.tagName != 'SECTION')
 						return;
@@ -964,7 +976,7 @@
 									}
 		
 							// Deactivate.
-								currentSection = $('#main > .inner > section:not(.inactive)');
+								currentSection = $('.site-main > .inner > section:not(.inactive)');
 		
 								if (currentSection) {
 		
@@ -1219,7 +1231,7 @@
 								}
 		
 						// Deactivate.
-							ee = $$('#main > .inner > section:not([id="' + initialId + '"])');
+							ee = $$('.site-main > .inner > section:not([id="' + initialId + '"])');
 		
 							for (k = 0; k < ee.length; k++) {
 		
@@ -1486,8 +1498,8 @@
 		
 					})();
 		
-				// Apply "is-touch" class to body.
-					$body.classList.add('is-touch');
+				// Apply "touch" class to body.
+					$body.classList.add('touch');
 		
 			}
 		
@@ -1532,8 +1544,8 @@
 		
 						})();
 		
-				// Apply "is-touch" class to body.
-					$body.classList.add('is-touch');
+				// Apply "touch" class to body.
+					$body.classList.add('touch');
 		
 			}
 	
@@ -1929,10 +1941,10 @@
 		
 						setTimeout(function() {
 		
-							// Clear background image.
-								i.style.backgroundImage = 'none';
+							// Clear parent frame's background image.
+								p.style.backgroundImage = 'none';
 		
-							// Clear transition properties.
+							// Clear image's transition properties.
 								i.style.transitionProperty = '';
 								i.style.transitionTimingFunction = '';
 								i.style.transitionDuration = '';
